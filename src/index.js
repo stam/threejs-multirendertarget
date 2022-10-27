@@ -41,23 +41,21 @@ function init() {
 
   // Create a multi render target with Float buffers
 
-  // renderTarget = new THREE.WebGLMultipleRenderTargets(
-  //   window.innerWidth * window.devicePixelRatio,
-  //   window.innerHeight * window.devicePixelRatio,
-  //   2
-  // );
+  renderTarget = new THREE.WebGLMultipleRenderTargets(
+    window.innerWidth * window.devicePixelRatio,
+    window.innerHeight * window.devicePixelRatio,
+    2
+  );
 
-  // renderTarget.samples = 1;
-
-  // for (let i = 0, il = renderTarget.texture.length; i < il; i++) {
-  //   renderTarget.texture[i].minFilter = THREE.NearestFilter;
-  //   renderTarget.texture[i].magFilter = THREE.NearestFilter;
-  // }
+  for (let i = 0, il = renderTarget.texture.length; i < il; i++) {
+    renderTarget.texture[i].minFilter = THREE.NearestFilter;
+    renderTarget.texture[i].magFilter = THREE.NearestFilter;
+  }
 
   // Name our G-Buffer attachments for debugging
 
-  // renderTarget.texture[0].name = "diffuse";
-  // renderTarget.texture[1].name = "normal";
+  renderTarget.texture[0].name = "diffuse";
+  renderTarget.texture[1].name = "normal";
 
   // Scene setup
 
@@ -77,6 +75,7 @@ function init() {
   const textureUrl = require("./assets/hardwood2_diffuse.jpeg");
   console.log("textureUrl", textureUrl);
   const diffuse = loader.load(textureUrl, render);
+  console.log("diffuse", diffuse);
   diffuse.wrapS = THREE.RepeatWrapping;
   diffuse.wrapT = THREE.RepeatWrapping;
 
@@ -101,32 +100,32 @@ function init() {
 
   // PostProcessing setup
 
-  // postScene = new THREE.Scene();
-  // postCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+  postScene = new THREE.Scene();
+  postCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
 
-  // postScene.add(
-  //   new THREE.Mesh(
-  //     new THREE.PlaneGeometry(2, 2),
-  //     new THREE.RawShaderMaterial({
-  //       vertexShader: document.querySelector("#render-vert").textContent.trim(),
-  //       fragmentShader: document
-  //         .querySelector("#render-frag")
-  //         .textContent.trim(),
-  //       uniforms: {
-  //         tDiffuse: { value: renderTarget.texture[0] },
-  //         tNormal: { value: renderTarget.texture[1] }
-  //       },
-  //       glslVersion: THREE.GLSL3
-  //     })
-  //   )
-  // );
+  postScene.add(
+    new THREE.Mesh(
+      new THREE.PlaneGeometry(2, 2),
+      new THREE.RawShaderMaterial({
+        vertexShader: document.querySelector("#render-vert").textContent.trim(),
+        fragmentShader: document
+          .querySelector("#render-frag")
+          .textContent.trim(),
+        uniforms: {
+          tDiffuse: { value: renderTarget.texture[0] },
+          tNormal: { value: renderTarget.texture[1] },
+        },
+        glslVersion: THREE.GLSL3,
+      })
+    )
+  );
 
   // Controls
   // console.log("domElement", renderer.domElement);
   controls = new OrbitControls(camera, renderer.domElement);
   controls.update();
   controls.addEventListener("change", render);
-  //controls.enableZoom = false;
+  controls.enableZoom = false;
 
   window.addEventListener("resize", onWindowResize);
 
@@ -140,7 +139,7 @@ function onWindowResize() {
 
   renderer.setSize(window.innerWidth, window.innerHeight);
 
-  const dpr = renderer.getPixelRatio();
+  // const dpr = renderer.getPixelRatio();
   // renderTarget.setSize(window.innerWidth * dpr, window.innerHeight * dpr);
 
   render();
@@ -157,11 +156,13 @@ function render() {
 
   // render scene into target
   // debugger;
-  renderer.setRenderTarget(null);
+  renderer.setRenderTarget(renderTarget);
   renderer.render(scene, camera);
 
   // render post FX
-  // renderer.setRenderTarget(null);
-  // renderer.render(postScene, postCamera);
+  renderer.setRenderTarget(null);
+  renderer.render(postScene, postCamera);
+  // renderer.render(scene, camera);
+
   // requestAnimationFrame(render);
 }
