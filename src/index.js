@@ -73,8 +73,22 @@ function init() {
   const loader = new THREE.TextureLoader();
 
   const textureUrl = require("./assets/hardwood2_diffuse.jpeg");
-  console.log("textureUrl", textureUrl);
   const diffuse = loader.load(textureUrl, render);
+
+  // https://threejs.org/examples/textures/hardwood2_diffuse.jpg
+
+  // const diffuse = loader.load(
+  //   "https://threejs.org/examples/textures/hardwood2_diffuse.jpg",
+  //   () => {
+  //     render();
+  //   }
+  // );
+
+  const hardWoodMaterial = new THREE.MeshBasicMaterial({
+    // color: 0xffffff,
+    map: diffuse,
+  });
+
   console.log("diffuse", diffuse);
   diffuse.wrapS = THREE.RepeatWrapping;
   diffuse.wrapT = THREE.RepeatWrapping;
@@ -82,6 +96,7 @@ function init() {
   scene.add(
     new THREE.Mesh(
       new THREE.TorusKnotGeometry(1, 0.3, 128, 32),
+      // hardWoodMaterial
       new THREE.RawShaderMaterial({
         vertexShader: document
           .querySelector("#gbuffer-vert")
@@ -139,13 +154,18 @@ function onWindowResize() {
 
   renderer.setSize(window.innerWidth, window.innerHeight);
 
-  // const dpr = renderer.getPixelRatio();
-  // renderTarget.setSize(window.innerWidth * dpr, window.innerHeight * dpr);
+  const dpr = renderer.getPixelRatio();
+  renderTarget.setSize(window.innerWidth * dpr, window.innerHeight * dpr);
 
   render();
 }
 
 function render() {
+  // MRT off
+  // renderer.render(scene, camera);
+  // renderer.setRenderTarget(null);
+
+  // MRT on
   // renderTarget.samples = parameters.samples;
 
   // scene.traverse(function (child) {
@@ -155,14 +175,12 @@ function render() {
   // });
 
   // render scene into target
-  // debugger;
   renderer.setRenderTarget(renderTarget);
   renderer.render(scene, camera);
 
   // render post FX
   renderer.setRenderTarget(null);
   renderer.render(postScene, postCamera);
-  // renderer.render(scene, camera);
 
   // requestAnimationFrame(render);
 }

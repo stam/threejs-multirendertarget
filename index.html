@@ -4,93 +4,95 @@
     <meta charset="UTF-8" />
     <link type="text/css" rel="stylesheet" href="./src/styles.css">
 
-    <script id="gbuffer-vert" type="x-shader/x-vertex">
-      in vec3 position;
-      in vec3 normal;
-      in vec2 uv;
+    <!-- Write to G-Buffer -->
+		<script id="gbuffer-vert" type="x-shader/x-vertex">
+			in vec3 position;
+			in vec3 normal;
+			in vec2 uv;
 
-      out vec3 vNormal;
-      out vec2 vUv;
+			out vec3 vNormal;
+			out vec2 vUv;
 
-      uniform mat4 modelViewMatrix;
-      uniform mat4 projectionMatrix;
-      uniform mat3 normalMatrix;
+			uniform mat4 modelViewMatrix;
+			uniform mat4 projectionMatrix;
+			uniform mat3 normalMatrix;
 
-      void main() {
+			void main() {
 
-      	vUv = uv;
+				vUv = uv;
 
-      	// get smooth normals
-      	vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
+				// get smooth normals
+				vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
 
-      	vec3 transformedNormal = normalMatrix * normal;
-      	vNormal = normalize( transformedNormal );
+				vec3 transformedNormal = normalMatrix * normal;
+				vNormal = normalize( transformedNormal );
 
-      	gl_Position = projectionMatrix * mvPosition;
+				gl_Position = projectionMatrix * mvPosition;
 
-      }
-    </script>
-    <script id="gbuffer-frag" type="x-shader/x-fragment">
-      precision highp float;
-      precision highp int;
+			}
+		</script>
+		<script id="gbuffer-frag" type="x-shader/x-fragment">
+			precision highp float;
+			precision highp int;
 
-      layout(location = 0) out vec4 gColor;
-      layout(location = 1) out vec4 gData;
+			layout(location = 0) out vec4 gColor;
+			layout(location = 1) out vec4 gNormal;
 
-      uniform sampler2D tDiffuse;
-      uniform vec2 repeat;
+			uniform sampler2D tDiffuse;
+			uniform vec2 repeat;
 
-      in vec3 vNormal;
-      in vec2 vUv;
+			in vec3 vNormal;
+			in vec2 vUv;
 
-      void main() {
-        // write normals to color output
-      	gColor = vec4( normalize( vNormal ), 0.0 );
+			void main() {
 
-      	// write data to second output
-      	gData = vec4(1., 0., 0., 1.);
+				// write color to G-Buffer
+				gColor = texture( tDiffuse, vUv * repeat );
 
-      }
-    </script>
+				// write normals to G-Buffer
+				gNormal = vec4( normalize( vNormal ), 0.0 );
 
-    <!-- Read G-Buffer and render to screen -->
-    <script id="render-vert" type="x-shader/x-vertex">
-      in vec3 position;
-      in vec2 uv;
+			}
+		</script>
 
-      out vec2 vUv;
+		<!-- Read G-Buffer and render to screen -->
+		<script id="render-vert" type="x-shader/x-vertex">
+			in vec3 position;
+			in vec2 uv;
 
-      uniform mat4 modelViewMatrix;
-      uniform mat4 projectionMatrix;
+			out vec2 vUv;
 
-      void main() {
+			uniform mat4 modelViewMatrix;
+			uniform mat4 projectionMatrix;
 
-      	vUv = uv;
-      	gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+			void main() {
 
-      }
-    </script>
-    <script id="render-frag" type="x-shader/x-fragment">
-      precision highp float;
-      precision highp int;
+				vUv = uv;
+				gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
 
-      layout(location = 0) out vec4 pc_FragColor;
+			}
+		</script>
+		<script id="render-frag" type="x-shader/x-fragment">
+			precision highp float;
+			precision highp int;
 
-      in vec2 vUv;
+			layout(location = 0) out vec4 pc_FragColor;
 
-      uniform sampler2D tDiffuse;
-      uniform sampler2D tNormal;
+			in vec2 vUv;
 
-      void main() {
+			uniform sampler2D tDiffuse;
+			uniform sampler2D tNormal;
 
-      	vec3 diffuse = texture( tDiffuse, vUv ).rgb;
-      	vec3 normal = texture( tNormal, vUv ).rgb;
+			void main() {
 
-      	pc_FragColor.rgb = mix( diffuse, normal, step( 0.5, vUv.x ) );
-      	pc_FragColor.a = 1.0;
+				vec3 diffuse = texture( tDiffuse, vUv ).rgb;
+				vec3 normal = texture( tNormal, vUv ).rgb;
 
-      }
-    </script>
+				pc_FragColor.rgb = mix( diffuse, normal, step( 0.5, vUv.x ) );
+				pc_FragColor.a = 1.0;
+
+			}
+		</script>
   </head>
 
   <body>
