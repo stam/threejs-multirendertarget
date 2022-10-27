@@ -2,6 +2,8 @@
   <head>
     <title>Parcel Sandbox</title>
     <meta charset="UTF-8" />
+    <link type="text/css" rel="stylesheet" href="./src/styles.css">
+
     <script id="gbuffer-vert" type="x-shader/x-vertex">
       in vec3 position;
       in vec3 normal;
@@ -52,7 +54,7 @@
     </script>
 
     <!-- Read G-Buffer and render to screen -->
-    <!-- <script id="render-vert" type="x-shader/x-vertex">
+    <script id="render-vert" type="x-shader/x-vertex">
       in vec3 position;
       in vec2 uv;
 
@@ -88,7 +90,7 @@
       	pc_FragColor.a = 1.0;
 
       }
-    </script> -->
+    </script>
   </head>
 
   <body>
