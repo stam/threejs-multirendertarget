@@ -2,93 +2,97 @@
   <head>
     <title>Parcel Sandbox</title>
     <meta charset="UTF-8" />
-    <script id="gbuffer-vert" type="x-shader/x-vertex">
-      in vec3 position;
-      in vec3 normal;
-      in vec2 uv;
+    <link type="text/css" rel="stylesheet" href="./src/styles.css">
 
-      out vec3 vNormal;
-      out vec2 vUv;
+    <!-- Write to G-Buffer -->
+		<script id="gbuffer-vert" type="x-shader/x-vertex">
+			in vec3 position;
+			in vec3 normal;
+			in vec2 uv;
 
-      uniform mat4 modelViewMatrix;
-      uniform mat4 projectionMatrix;
-      uniform mat3 normalMatrix;
+			out vec3 vNormal;
+			out vec2 vUv;
 
-      void main() {
+			uniform mat4 modelViewMatrix;
+			uniform mat4 projectionMatrix;
+			uniform mat3 normalMatrix;
 
-      	vUv = uv;
+			void main() {
 
-      	// get smooth normals
-      	vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
+				vUv = uv;
 
-      	vec3 transformedNormal = normalMatrix * normal;
-      	vNormal = normalize( transformedNormal );
+				// get smooth normals
+				vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
 
-      	gl_Position = projectionMatrix * mvPosition;
+				vec3 transformedNormal = normalMatrix * normal;
+				vNormal = normalize( transformedNormal );
 
-      }
-    </script>
-    <script id="gbuffer-frag" type="x-shader/x-fragment">
-      precision highp float;
-      precision highp int;
+				gl_Position = projectionMatrix * mvPosition;
 
-      layout(location = 0) out vec4 gColor;
-      layout(location = 1) out vec4 gData;
+			}
+		</script>
+		<script id="gbuffer-frag" type="x-shader/x-fragment">
+			precision highp float;
+			precision highp int;
 
-      uniform sampler2D tDiffuse;
-      uniform vec2 repeat;
+			layout(location = 0) out vec4 gColor;
+			layout(location = 1) out vec4 gNormal;
 
-      in vec3 vNormal;
-      in vec2 vUv;
+			uniform sampler2D tDiffuse;
+			uniform vec2 repeat;
 
-      void main() {
-        // write normals to color output
-      	gColor = vec4( normalize( vNormal ), 0.0 );
+			in vec3 vNormal;
+			in vec2 vUv;
 
-      	// write data to second output
-      	gData = vec4(1., 0., 0., 1.);
+			void main() {
 
-      }
-    </script>
+				// write color to G-Buffer
+				gColor = texture( tDiffuse, vUv * repeat );
 
-    <!-- Read G-Buffer and render to screen -->
-    <!-- <script id="render-vert" type="x-shader/x-vertex">
-      in vec3 position;
-      in vec2 uv;
+				// write normals to G-Buffer
+				gNormal = vec4( normalize( vNormal ), 0.0 );
 
-      out vec2 vUv;
+			}
+		</script>
 
-      uniform mat4 modelViewMatrix;
-      uniform mat4 projectionMatrix;
+		<!-- Read G-Buffer and render to screen -->
+		<script id="render-vert" type="x-shader/x-vertex">
+			in vec3 position;
+			in vec2 uv;
 
-      void main() {
+			out vec2 vUv;
 
-      	vUv = uv;
-      	gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+			uniform mat4 modelViewMatrix;
+			uniform mat4 projectionMatrix;
 
-      }
-    </script>
-    <script id="render-frag" type="x-shader/x-fragment">
-      precision highp float;
-      precision highp int;
+			void main() {
 
-      layout(location = 0) out vec4 pc_FragColor;
+				vUv = uv;
+				gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
 
-      in vec2 vUv;
+			}
+		</script>
+		<script id="render-frag" type="x-shader/x-fragment">
+			precision highp float;
+			precision highp int;
 
-      uniform sampler2D tDiffuse;
-      uniform sampler2D tNormal;
+			layout(location = 0) out vec4 pc_FragColor;
 
-      void main() {
+			in vec2 vUv;
 
-      	vec3 diffuse = texture( tDiffuse, vUv ).rgb;
-      	vec3 normal = texture( tNormal, vUv ).rgb;
+			uniform sampler2D tDiffuse;
+			uniform sampler2D tNormal;
 
-      	pc_FragColor.rgb = mix( diffuse, normal, step( 0.5, vUv.x ) );
-      	pc_FragColor.a = 1.0;
+			void main() {
 
-      }
-    </script> -->
+				vec3 diffuse = texture( tDiffuse, vUv ).rgb;
+				vec3 normal = texture( tNormal, vUv ).rgb;
+
+				pc_FragColor.rgb = mix( diffuse, normal, step( 0.5, vUv.x ) );
+				pc_FragColor.a = 1.0;
+
+			}
+		</script>
   </head>
 
   <body>
